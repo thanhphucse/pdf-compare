@@ -1,86 +1,117 @@
-import React from "react";
-import { Box, Grid2 } from "@mui/material";
+import React, { useState, useEffect} from "react";
+import { Box, Grid2, CircularProgress } from "@mui/material";
 import TopBar from "./components/TopBar";
+import CustomSeparator from "./components/Breadcrumps";
 import MainArea from "./components/MainArea";
-import SidePanel from "./components/SidePanel";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Home from "./pages/Home";
-import Text from "./pages/Text";
-import Document from "./pages/Document";
-import Image from "./pages/Image";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import CompareText from "./pages/CompareText";
+import CompareDocument from "./pages/CompareDocument";
+import CompareImage from "./pages/CompareImage";
+import SignIn from "./auth/Sign-in";
+import SignUp from "./auth/Sign-up";
+import Account from './pages/Account';
+import Dashboard from './pages/Dashboard';
+import HomePage from './pages/HomePage';
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState(null);
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [projectType, setProjectType] = useState(null);
+  console.log(projectType);
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if(!!token){
+      setIsAuthenticated(true); 
+    }
+    setIsLoading(false);
+  }, []);
+
+  if (isLoading) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <CircularProgress /> {/* Material-UI spinner */}
+      </Box>
+    );
+  }
+  const handleSignIn = (token) => {
+    localStorage.setItem("token", token); 
+    setIsAuthenticated(true);
+  };
+
+  const handleSignOut = () => {
+    localStorage.removeItem("token"); 
+    setIsAuthenticated(false);
+  };
   return (
     <Router>
       <Box sx={{ display: "flex", flexDirection: "column", height: "100vh" }}>
-        {/* Always display the TopBar */}
-        <TopBar />
-
-        <Box sx={{ display: "flex"}}>
-          {/* Dynamically render the MainArea and SidePanel based on the route */}
+        <TopBar isAuthenticated={isAuthenticated} onSignOut={handleSignOut} />
+        <CustomSeparator workingProject={selectedProject} workingTypeProject={setProjectType}/>
+        <Grid2 sx={{ display: "flex"}} container>
           <Routes>
             <Route
               path="/"
               element={
-                <>
-                  <Grid2 container spacing={2}>
-                    <Grid2 container xs={12} sm={6} size={12} sx={{ p:4 }}>
-                      <MainArea pageContent={<Document />}/>
+                (isAuthenticated) ? (
+                    <Grid2 container xs={12} sm={12} size={12} sx={{ p:1, mt: 1}}>
+                      <MainArea pageContent={<HomePage setSelectedProject={setSelectedProject}/>}/>
                     </Grid2>
-                    {/* <Grid2 container xs={12} sm={6} size={2} sx={{ height: "100vh" }}>
-                      <SidePanel />
-                    </Grid2> */}
-                  </Grid2>
-                </>
+                )
+                : (
+                  <Navigate to="/sign-in"/>
+                )
               }
             />
             <Route
               path="/text"
               element={
-                <>
-                  <Grid2 container spacing={2}>
-                    <Grid2 container xs={12} sm={6} size={12} sx={{ p:4 }}>
-                      <MainArea pageContent={<Text />}/>
-                    </Grid2>
-                    {/* <Grid2 container xs={12} sm={6} size={2} sx={{ height: "100vh" }}>
-                      <SidePanel />
-                    </Grid2> */}
+                (isAuthenticated) ? (
+                  <Grid2 container xs={12} sm={6} size={12} sx={{ p:1, mt: 1}}>
+                    <MainArea pageContent={<CompareText />}/>
                   </Grid2>
-                </>
+                ):
+                (<Navigate to="/sign-in"/>)
               }
             />
             <Route
               path="/document"
               element={
-                <>
-                  <Grid2 container spacing={2}>
-                    <Grid2 container xs={12} sm={6} size={12} sx={{ p:4 }}>
-                      <MainArea pageContent={<Document />}/>
+                (isAuthenticated) ? (
+                    <Grid2 container lg={12} xs={12} sm={12} size={12} sx={{ p:1, mt: 1}}>
+                      <MainArea pageContent={<CompareDocument />}/>
                     </Grid2>
-                    {/* <Grid2 container xs={12} sm={6} size={2} sx={{ height: "100vh" }}>
-                      <SidePanel />
-                    </Grid2> */}
-                  </Grid2>
-                </>
+                ):
+                (<Navigate to="/sign-in"/>)
               }
             />
             <Route
               path="/images"
               element={
-                <>
-                  <Grid2 container spacing={2}>
-                    <Grid2 container xs={12} sm={6} size={12} sx={{ p:4 }}>
-                      <MainArea pageContent={<Image />}/>
+                (isAuthenticated) ? (
+                    <Grid2 container xs={12} sm={6} size={12} sx={{ p:1, mt: 1}}>
+                      <MainArea pageContent={<CompareImage selectedProject={selectedProject}/>}/>
                     </Grid2>
-                    {/* <Grid2 container xs={12} sm={6} size={2} sx={{ height: "100vh" }}>
-                      <SidePanel />
-                    </Grid2> */}
-                  </Grid2>
-                </>
+                ):
+                (<Navigate to="/sign-in"/>)
               }
             />
+            {/* Authentication Routes */}
+            <Route path="/sign-in" element={<SignIn onSignIn={handleSignIn} setUser={setUser}/>} />
+            <Route path="/sign-up" element={<SignUp />} />
+            <Route path="/account" element={<Account/>}/>
+            <Route path="/dashboard" element={<Dashboard />}/>
+            <Route path="/" element={<HomePage />}/>
           </Routes>
-        </Box>
+        </Grid2>
       </Box>
     </Router>
   );

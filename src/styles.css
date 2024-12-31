@@ -1,8 +1,243 @@
 body {
   margin: 0;
   font-family: Arial, sans-serif;
+  /* overflow: hidden; Prevent unintended scrolling */
 }
 
 button {
   text-transform: none;
 }
+
+/* Style for the container */
+.sign-in, .sign-up {
+  max-width: 500px;
+  margin: 150px auto;
+  padding: 20px;
+  background-color: #fefafa;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+  font-family: 'Arial', sans-serif;
+  text-align: center;
+}
+
+/* Heading */
+.sign-in h1, .sign-up h1 {
+  margin-bottom: 20px;
+  font-size: 2rem;
+  color: #333333;
+}
+
+/* Form Labels */
+form label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #555555;
+  text-align: left;
+}
+
+/* Input Fields */
+form input {
+  width: 400px;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease-in-out;
+}
+
+form input:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+/* Submit Button */
+form button {
+  width: 100%;
+  padding: 12px;
+  background-color: #007bff;
+  color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease-in-out;
+}
+
+form button:hover {
+  background-color: #0056b3;
+}
+
+/* Link Styling */
+.sign-in a, .sign-up a{
+  display: inline-block;
+  margin-top: 15px;
+  color: #007bff;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.sign-in a:hover, .sign-up a:hover{
+  text-decoration: underline;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+  .sign-in {
+    margin: 20px;
+    padding: 15px;
+  }
+
+  form button {
+    font-size: 0.9rem;
+  }
+}
+
+
+.custom-wrapper {
+  height: 100%;
+  border: 2px solid #4caf50;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  background-color: #f9f9f9;
+}
+
+.custom-editor {
+  height: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #fff;
+  overflow-y: auto; /* Enables vertical scrolling */
+  line-height: 0.75;
+  color: #0056b3;
+}
+
+.custom-toolbar{
+  display: none;
+}
+
+.tui-image-editor-header-logo{
+  display: none;
+}
+
+#first-image, #second-image{
+  margin-top: 2;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+img{
+  max-width: 100%;
+  max-height: 100%;
+}
+
+/*-------------------------- style for popup home page----------------------------- */
+
+.popup-container {
+  margin: 0 auto;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.popup {
+  background-color: #ffffff;
+  padding: 30px;
+  border-radius: 5px;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.5); /* Add a subtle shadow */
+  text-align: center; /* Center text within the popup */
+}
+
+.popup h2 {
+  margin-bottom: 10px; 
+  color: #333; /* Darker heading color */
+}
+
+.popup p {
+  margin-bottom: 20px;
+  color: #666;
+}
+
+.popup button {
+  background-color: #007bff; /* Blue background color */
+  color: #fff;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  margin: 10px 0; /* Add spacing between buttons */
+}
+
+.open-project-section {
+  margin-bottom: 20px; 
+  display: flex;
+  align-items: center; /* Align button and select vertically */
+  justify-content: center; /* Center the elements horizontally */
+}
+
+.project-select {
+  margin-left: 10px; /* Add spacing between button and select */
+  padding: 8px;
+  border: 1px solid #ced4da; /* Add a border to the select */
+  border-radius: 3px;
+}
+
+/*-------------------- style for new project form -------------------------*/
+.project-form {
+  width: 500px; /* Adjust width as needed */
+  margin: 0 auto; /* Center the form */
+  padding: 30px;
+  background-color: #fff;
+  border-radius: 5px;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.project-form h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.project-form div {
+  margin-bottom: 15px;
+}
+
+.project-form label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.project-form input,
+.project-form textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ced4da;
+  border-radius: 3px;
+  box-sizing: border-box; 
+}
+
+.project-form textarea {
+  height: 120px; 
+  resize: vertical; /* Allow vertical resizing of the textarea */
+}
+
+.project-form button {
+  background-color: #28a745; /* Green background color */
+  color: #fff;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+/* style for new project form */
+
+/* -------------------styling for breadcrumps--------------------------- */

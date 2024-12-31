@@ -12,18 +12,30 @@ import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
-import AdbIcon from '@mui/icons-material/Adb';
+import { useNavigate } from "react-router-dom";
 
 const pages = [
+  { 
+    name: "Project", 
+    path: "/project", // You might not need a specific path for a dropdown
+    submenu: [
+      { name: "Open project", path: "/open-project" },
+      { name: "New project", path: "/new-project" },
+      { name: "Rename", path: "/rename-project" }, // Adjust paths as needed
+    ]
+  },
   { name: "Images", path: "/images" },
   { name: "Text", path: "/text" },
-  { name: "Document", path: "/document" },
+  { name: "Pdf", path: "/document" },
 ];
+
 const settings = ["Profile", "Account", "Dashboard", "Logout"];
 
-function TopBar() {
+function TopBar({ isAuthenticated, onSignOut }) {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
+  const [anchorElProject, setAnchorElProject] = React.useState(null); // Add for Project menu
+  const navigate = useNavigate();
 
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
@@ -41,8 +53,31 @@ function TopBar() {
     setAnchorElUser(null);
   };
 
+  const handleMenuClick = (setting) => {
+    handleCloseUserMenu(); 
+    if (setting === "Logout") {
+      onSignOut(); 
+    } else {
+      navigate(`/${setting.toLowerCase()}`)
+    }
+  };
+
+  // Project Menu Handlers
+  const handleOpenProjectMenu = (event) => {
+    setAnchorElProject(event.currentTarget);
+  };
+
+  const handleCloseProjectMenu = () => {
+    setAnchorElProject(null);
+  };
+
+  const handleProjectMenuClick = (path) => {
+    handleCloseProjectMenu();
+    navigate(path); 
+  };
+
   return (
-    <AppBar position="static" sx={{ bgcolor: "primary.light" }}>
+    <AppBar position="fixed" sx={{ bgcolor: "primary.light" }}>
       <Container maxWidth="xl">
         <Toolbar disableGutters>
           {/* Logo */}
@@ -56,7 +91,7 @@ function TopBar() {
               display: { xs: "none", md: "flex" },
               fontFamily: "monospace",
               fontWeight: 700,
-              letterSpacing: ".3rem",
+              letterSpacing: ".2rem",
               color: "inherit",
               textDecoration: "none",
             }}
@@ -76,7 +111,7 @@ function TopBar() {
               aria-controls="menu-appbar"
               aria-haspopup="true"
               onClick={handleOpenNavMenu}
-              color="inherit"
+              color="primary"
             >
               <MenuIcon />
             </IconButton>
@@ -97,70 +132,133 @@ function TopBar() {
               sx={{ display: { xs: "block", md: "none" } }}
             >
               {pages.map((page) => (
-                <MenuItem key={page.name} onClick={handleCloseNavMenu}>
-                  <Typography
-                    component={Link} // Link for navigation
-                    to={page.path}
-                    sx={{ textAlign: "center", textDecoration: "none", color: "inherit" }}
-                  >
-                    {page.name}
-                  </Typography>
-                </MenuItem>
-              ))}
+                  <MenuItem key={page.name} onClick={handleCloseNavMenu}>
+                    {page.submenu ? ( // Check for submenu
+                      <>
+                        <Typography textAlign="center">{page.name}</Typography> 
+                        <Menu 
+                          anchorEl={anchorElProject} 
+                          open={Boolean(anchorElProject)} 
+                          onClose={handleCloseProjectMenu}
+                          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+                          transformOrigin={{ vertical: 'top', horizontal: 'center' }}
+                        >
+                          {page.submenu.map((item) => (
+                            <MenuItem key={item.name} onClick={() => handleProjectMenuClick(item.path)}>
+                              <Typography textAlign="center">{item.name}</Typography>
+                            </MenuItem>
+                          ))}
+                        </Menu>
+                      </>
+                    ) : (
+                      <Typography
+                        component={Link}
+                        to={page.path}
+                        sx={{ textAlign: "center", textDecoration: "none", color: "primary" }}
+                      >
+                        {page.name}
+                      </Typography>
+                    )}
+                  </MenuItem>
+                ))}
             </Menu>
           </Box>
 
           {/* Desktop Menu */}
           <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}>
             {pages.map((page) => (
-              <Button
-                key={page.name}
-                component={Link} // Link for navigation
-                to={page.path}
-                sx={{
-                  my: 2,
-                  color: "white",
-                  display: "block",
-                  textDecoration: "none",
-                }}
-              >
-                {page.name}
-              </Button>
+              <div key={page.name}> {/* Wrap in a div for submenu */}
+                {page.submenu ? ( // Check for submenu
+                  <>
+                    <Button 
+                      onClick={handleOpenProjectMenu}
+                      sx={{ 
+                        my: 2, 
+                        color: "primary", 
+                        display: "block", 
+                        textDecoration: "none", 
+                        fontWeight: "bold", 
+                        fontSize: "1.1rem" 
+                      }}
+                    >
+                      {page.name}
+                    </Button>
+                    <Menu
+                      anchorEl={anchorElProject}
+                      open={Boolean(anchorElProject)}
+                      onClose={handleCloseProjectMenu}
+                      anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+                      transformOrigin={{ vertical: 'top', horizontal: 'center' }}
+                    >
+                      {page.submenu.map((item) => (
+                        <MenuItem key={item.name} onClick={() => handleProjectMenuClick(item.path)}>
+                          <Typography textAlign="center">{item.name}</Typography>
+                        </MenuItem>
+                      ))}
+                    </Menu>
+                  </>
+                ) : (
+                  <Button
+                    key={page.name}
+                    component={Link}
+                    to={page.path}
+                    sx={{
+                      my: 2,
+                      color: "primary",
+                      display: "block",
+                      textDecoration: "none",
+                      fontWeight: "bold",
+                      fontSize: "1.1rem",
+                    }}
+                  >
+                    {page.name}
+                  </Button>
+                )}
+                </div>
             ))}
           </Box>
 
           {/* User Menu */}
           <Box sx={{ flexGrow: 0 }}>
-            <Tooltip title="Open settings">
-              <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
-              </IconButton>
-            </Tooltip>
-            <Menu
-              sx={{ mt: "45px" }}
-              id="menu-appbar"
-              anchorEl={anchorElUser}
-              anchorOrigin={{
-                vertical: "top",
-                horizontal: "right",
-              }}
-              keepMounted
-              transformOrigin={{
-                vertical: "top",
-                horizontal: "right",
-              }}
-              open={Boolean(anchorElUser)}
-              onClose={handleCloseUserMenu}
-            >
-              {settings.map((setting) => (
-                <MenuItem key={setting} onClick={handleCloseUserMenu}>
-                  <Typography textAlign="center">{setting}</Typography>
-                </MenuItem>
-              ))}
-            </Menu>
+            {isAuthenticated ? (
+              <>
+                <Tooltip title="Open settings">
+                  <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
+                    <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
+                  </IconButton>
+                </Tooltip>
+                <Menu
+                  sx={{ mt: "45px" }}
+                  id="menu-appbar"
+                  anchorEl={anchorElUser}
+                  anchorOrigin={{
+                    vertical: "top",
+                    horizontal: "right",
+                  }}
+                  keepMounted
+                  transformOrigin={{
+                    vertical: "top",
+                    horizontal: "right",
+                  }}
+                  open={Boolean(anchorElUser)}
+                  onClose={handleCloseUserMenu}
+                >
+                  {["Account", "Dashboard", "Logout"].map((setting) => (
+                    <MenuItem key={setting} onClick={() => handleMenuClick(setting)}>
+                      <Typography textAlign="center">{setting}</Typography>
+                    </MenuItem>
+                  ))}
+                </Menu>
+              </>
+            ):(
+              <Button component={Link} to="/sign-in" sx={{color: "black"}}>
+                Sign In
+              </Button>
+            )}            
           </Box>
         </Toolbar>
       </Container>
+
     </AppBar>
   );
 }
