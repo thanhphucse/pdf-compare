@@ -12,6 +12,7 @@ import SignUp from "./auth/Sign-up";
 import Account from './pages/Account';
 import Dashboard from './pages/Dashboard';
 import HomePage from './pages/HomePage';
+import ProjectViews from "./components/ProjectViews";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -20,10 +21,12 @@ function App() {
   const [selectedProject, setSelectedProject] = useState(null);
   const [projectType, setProjectType] = useState(null);
   console.log(projectType);
+  
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if(!!token){
-      setIsAuthenticated(true); 
+    const accessToken = localStorage.getItem("token");
+    const accessTokenExpiry = localStorage.getItem("token_expiry");
+    if (accessToken && new Date().getTime() < accessTokenExpiry) {
+      setIsAuthenticated(true);
     }
     setIsLoading(false);
   }, []);
@@ -54,8 +57,8 @@ function App() {
   return (
     <Router>
       <Box sx={{ display: "flex", flexDirection: "column", height: "100vh" }}>
-        <TopBar isAuthenticated={isAuthenticated} onSignOut={handleSignOut} />
-        <CustomSeparator workingProject={selectedProject} workingTypeProject={setProjectType}/>
+        <TopBar isAuthenticated={isAuthenticated} onSignOut={handleSignOut} setSelectedProject={setSelectedProject}/>
+        {isAuthenticated && <CustomSeparator workingProject={selectedProject} workingTypeProject={setProjectType}/>}
         <Grid2 sx={{ display: "flex"}} container>
           <Routes>
             <Route
@@ -76,18 +79,18 @@ function App() {
               element={
                 (isAuthenticated) ? (
                   <Grid2 container xs={12} sm={6} size={12} sx={{ p:1, mt: 1}}>
-                    <MainArea pageContent={<CompareText />}/>
+                    <MainArea pageContent={<CompareText selectedProject={selectedProject}/>}/>
                   </Grid2>
                 ):
                 (<Navigate to="/sign-in"/>)
               }
             />
             <Route
-              path="/document"
+              path="/pdf"
               element={
                 (isAuthenticated) ? (
                     <Grid2 container lg={12} xs={12} sm={12} size={12} sx={{ p:1, mt: 1}}>
-                      <MainArea pageContent={<CompareDocument />}/>
+                      <MainArea pageContent={<CompareDocument selectedProject={selectedProject}/>}/>
                     </Grid2>
                 ):
                 (<Navigate to="/sign-in"/>)
@@ -104,12 +107,46 @@ function App() {
                 (<Navigate to="/sign-in"/>)
               }
             />
+            <Route
+              path="/projects"
+              element={
+                (isAuthenticated) ? (
+                    <Grid2 container xs={12} sm={6} size={12} sx={{ p:1, mt: 1}}>
+                      <MainArea pageContent={<ProjectViews onProjectView={setSelectedProject}/>}/>
+                    </Grid2>
+                ):
+                (<Navigate to="/sign-in"/>)
+              }
+            />
+            <Route
+              path="/dashboard"
+              element={
+                (isAuthenticated) ? (
+                    <Grid2 container xs={12} sm={6} size={12} sx={{ p:1, mt: 1}}>
+                      <MainArea pageContent={<Dashboard onResetProject={setSelectedProject}/>}/>
+                    </Grid2>
+                ):
+                (<Navigate to="/sign-in"/>)
+              }
+            />
+            <Route
+              path="/account"
+              element={
+                (isAuthenticated) ? (
+                    <Grid2 container xs={12} sm={6} size={12} sx={{ p:1, mt: 1}}>
+                      <MainArea pageContent={<Account onResetProject={setSelectedProject}/>}/>
+                    </Grid2>
+                ):
+                (<Navigate to="/sign-in"/>)
+              }
+            />
             {/* Authentication Routes */}
             <Route path="/sign-in" element={<SignIn onSignIn={handleSignIn} setUser={setUser}/>} />
             <Route path="/sign-up" element={<SignUp />} />
-            <Route path="/account" element={<Account/>}/>
-            <Route path="/dashboard" element={<Dashboard />}/>
+            <Route path="/account" element={<Account onResetProject={setSelectedProject}/>}/>
+            <Route path="/dashboard" element={<Dashboard onResetProject={setSelectedProject}/>}/>
             <Route path="/" element={<HomePage />}/>
+            <Route path="/projects" element={<ProjectViews onProjectView={setSelectedProject}/>}/>
           </Routes>
         </Grid2>
       </Box>

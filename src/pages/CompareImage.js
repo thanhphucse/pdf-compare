@@ -1,8 +1,12 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { Box, Button, Grid2 } from "@mui/material";
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { compareImage, API_BASE_URL } from "../api"; // Import the API function
 import axios from 'axios';
+import Swal from "sweetalert2";
+import * as pdfjsLib from 'pdfjs-dist';
+// Only needed if you're not serving PDF.js worker from your server
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 const loadScript = (src) => {
   return new Promise((resolve, reject) => {
@@ -23,23 +27,25 @@ async function handleSaveFilesAndComparison(comparisonData) {
     formData.append('project', projectId);  
     formData.append('file1_name', file1Data.name);
     formData.append('file1_type', file1Data.type);
-    formData.append('file1_data', file1Data.data);
+    // formData.append('file1_data', file1Data.data);
     formData.append('file2_name', file2Data.name);
     formData.append('file2_type', file2Data.type);
-    formData.append('file2_data', file2Data.data);
+    // formData.append('file2_data', file2Data.data);
+    formData.append('file1_data', new Blob([file1Data.data], { type: file1Data.type }), file1Data.name);
+    formData.append('file2_data', new Blob([file2Data.data], { type: file2Data.type }), file2Data.name);
     formData.append('comparison_type', comparisonType);
 
     if (resultData) {
         formData.append('result_data', resultData);
     }
     if (highlightedDifferencesData) {
-        formData.append('highlighted_differences_data', highlightedDifferencesData);
+        formData.append('highlighted_differences_data', new Blob([highlightedDifferencesData]));
     }
 
     try {
         const token = localStorage.getItem("token");
         const response = await axios.post(
-            "http://127.0.0.1:8000/api/comparisons/",
+            `${API_BASE_URL}/api/comparisons/create_files_and_comparison/`,
             formData,
             {
                 headers: {
@@ -48,17 +54,14 @@ async function handleSaveFilesAndComparison(comparisonData) {
                 },
             }
         );
-
         if (response.status === 201) {
-            console.log("Files and comparison saved successfully:", response.data);
-            return response.data;
+            return response.status;
         }
     } catch (error) {
         console.error("Error saving files and comparison:", error);
         throw error;
     }
 }
-
 
 const CompareImage = ({selectedProject}) => {
   const [source1, setSource1] = useState('assets/images/logo-main2.png');
@@ -212,19 +215,85 @@ const CompareImage = ({selectedProject}) => {
   const handleClick1 = () => hiddenFileInput1.current.click();
   const handleClick2 = () => hiddenFileInput2.current.click();
 
-  const handleFileChange = (e, fileNumber) => {
+  // const handleFileChange = (e, fileNumber) => {
+  //   const file = e.target.files[0];
+  //   if (!file) return;
+  //   const fileURL = URL.createObjectURL(file);
+  //   if (fileNumber === 1) {
+  //     setFile1(file);
+  //     setSource1(fileURL);
+  //     setEditedImage1(fileURL);
+  //   } else {
+  //     setFile2(file);
+  //     setSource2(fileURL);
+  //     setEditedImage2(fileURL);
+  //   }
+  // };
+  const handleFileChange = async (e, fileNumber) => {
     const file = e.target.files[0];
     if (!file) return;
-    const fileURL = URL.createObjectURL(file);
-    if (fileNumber === 1) {
-      setFile1(file);
-      setSource1(fileURL);
-      setEditedImage1(fileURL);
-    } else {
-      setFile2(file);
-      setSource2(fileURL);
-      setEditedImage2(fileURL);
+
+    try {
+      let fileURL;
+      
+      if (file.type === 'application/pdf') {
+        // Convert PDF to image
+        const imageBlob = await convertPDFToImage(file);
+        fileURL = URL.createObjectURL(imageBlob);
+      } else {
+        // Handle normal image files
+        fileURL = URL.createObjectURL(file);
+      }
+
+      if (fileNumber === 1) {
+        setFile1(file);
+        setSource1(fileURL);
+        setEditedImage1(fileURL);
+      } else {
+        setFile2(file);
+        setSource2(fileURL);
+        setEditedImage2(fileURL);
+      }
+    } catch (error) {
+      console.error('Error processing file:', error);
+      // Handle error appropriately (e.g., show error message to user)
     }
+  };
+
+  const convertPDFToImage = async (file) => {
+    // Read the PDF file
+    const arrayBuffer = await file.arrayBuffer();
+    
+    // Load the PDF document
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    
+    // Get the first page
+    const page = await pdf.getPage(1);
+    
+    // Set the scale for better quality
+    const scale = 2;
+    const viewport = page.getViewport({ scale });
+    
+    // Create a canvas element
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    canvas.height = viewport.height;
+    canvas.width = viewport.width;
+    
+    // Render PDF page into canvas context
+    const renderContext = {
+      canvasContext: context,
+      viewport: viewport
+    };
+    
+    await page.render(renderContext).promise;
+    
+    // Convert the canvas to blob
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => {
+        resolve(blob);
+      }, 'image/png');
+    });
   };
 
   const handleEditImage1 = () => {
@@ -240,7 +309,12 @@ const CompareImage = ({selectedProject}) => {
 
   const handleCompare = async () => {
     if (!editedImage1 || !editedImage2) {
-      alert("Please upload both files before comparing.");
+      Swal.fire({
+        icon: "warning",
+        title: "Missing Files",
+        text: "Please upload both files before comparing.",
+        confirmButtonText: "OK",
+      });
       return;
     }
     try {
@@ -266,22 +340,46 @@ const CompareImage = ({selectedProject}) => {
         if (result.highlighted_differences_url) {
           const uniqueURL = `${API_BASE_URL}${result.highlighted_differences_url}?t=${new Date().getTime()}`;
           setCompareResult(uniqueURL);
-          alert("Comparison successful.");
+          Swal.fire({
+            icon: "success",
+            title: "Comparison Successful",
+            text: "The comparison result is ready.",
+          });
         } else {
-          if (result.error) alert(result.error);
+          if (result.error) { 
+            Swal.fire({
+              icon: "error",
+              title: "Error",
+              text: result.error.toString(),
+            });
+          }
         }
       }else{
         const result = await compareImage(file1, file2);
         if (result.highlighted_differences_url) {
           const uniqueURL = `${API_BASE_URL}${result.highlighted_differences_url}?t=${new Date().getTime()}`;
           setCompareResult(uniqueURL);
-          alert("Comparison successful.");
+          Swal.fire({
+            icon: "success",
+            title: "Comparison Successful",
+            text: "The comparison result is ready.",
+          });
         } else {
-          if (result.error) alert(result.error);
+          if (result.error){
+            Swal.fire({
+              icon: "error",
+              title: "Error",
+              text: result.error.toString(),
+            });
+          }
         }
       }
     } catch (error) {
-      alert(error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.toString(),
+      });
     }
   };
 
@@ -310,16 +408,24 @@ const CompareImage = ({selectedProject}) => {
                 type: getFileType(file2.type),
                 data: file2Binary,
             },
-            comparisonType: 'image', // or 'image' or 'pdf'
-            resultData: '', // Your comparison result binary data
+            comparisonType: 'image',
+            resultData: '',
             highlightedDifferencesData: highlightedDifferencesData, // Your highlighted differences binary data
         });
-
-        if (result) {
-            console.log('Comparison saved successfully:', result);
+        if (result===201) {
+            Swal.fire({
+            icon: "success",
+            title: "saved",
+            text: "The comparison result is saved.",
+          });
         }
     } catch (error) {
-        console.error('Failed to save comparison:', error);
+        Swal.fire({
+        icon: "warning",
+        title: "Error",
+        // text: error.toString(),
+        text: "ensure a project is selected.",
+      });
     }
   };
 
@@ -336,7 +442,7 @@ const CompareImage = ({selectedProject}) => {
 
   return (
     <>
-      <Grid2 container spacing={2} size={12}>
+      <Grid2 container spacing={2} size={12} sx={{ mt: 14 }}>
         {/* First Image Section */}
         <Grid2 size={6}
           item
@@ -458,7 +564,7 @@ const CompareImage = ({selectedProject}) => {
       <Grid2 container justifyContent={"center"} size={12} sx={{display:'flex', flexDirection:'column'}}>
         <Box textAlign="center" marginTop={3}>
           <Button variant="contained" color="primary" onClick={handleCompare}>
-            Compare Images
+            Compare
           </Button>
         </Box>
 

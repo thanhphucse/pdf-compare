@@ -1,11 +1,9 @@
 import * as React from 'react';
 import Breadcrumbs from '@mui/material/Breadcrumbs';
 import Typography from '@mui/material/Typography';
-// import Link from '@mui/material/Link';
 import { Link as RouterLink } from 'react-router-dom';  // Import React Router Link
-import { Link as MUILink } from '@mui/material';  // Import Material UI Link
+import { Box, Link as MUILink } from '@mui/material';  // Import Material UI Link
 import Stack from '@mui/material/Stack';
-import { Grid2} from "@mui/material";
 import { useLocation } from 'react-router-dom';
 import { use } from 'react';
 import { useState } from 'react';
@@ -26,25 +24,28 @@ export default function CustomSeparator ({ workingProject, workingTypeProject })
   const location = useLocation();
   const items = generateBreadcrumbItems(location.pathname);
   const breadcrumbs = [
-    // Use RouterLink component for navigation
     <MUILink
-      component={RouterLink}  // Use RouterLink as the underlying component
+      component={RouterLink}
       underline="hover"
       key="1"
       color="inherit"
-      to="/"  // Use 'to' instead of 'href'
+      to="/"
     >
       Home
     </MUILink>,
-    <MUILink
+
+    workingProject && (
+      <MUILink
       component={RouterLink}
       underline="hover"
       key="2"
       color="inherit"
-      to="/projects"  // Update this path as needed
-    >
-      {workingProject ? workingProject.name : "Projects"}
-    </MUILink>,
+      to="/projects"
+      >
+        {workingProject.name}
+      </MUILink>
+    ),
+    
     <Typography key="3" sx={{ color: 'text.primary' }}>
       {items.map((item, index) => (
         <li 
@@ -55,7 +56,7 @@ export default function CustomSeparator ({ workingProject, workingTypeProject })
           {index === items.length - 1 ? (
             <>
               {item.label}
-              {(item.label === "Images" || item.label === "Text" || item.label === "Document") ? (
+              {(item.label === "Images" || item.label === "Text" || item.label === "Pdf") ? (
                 workingTypeProject(item.label)
               ):(
                 workingTypeProject(null)
@@ -77,12 +78,12 @@ export default function CustomSeparator ({ workingProject, workingTypeProject })
   ];
 
   return (
-    <Grid2 container spacing={2} size={12} sx={{mt:11, pl:5}}>
+    <Box sx={{ display:'flex', mt:'74.8px', pl:5, backgroundColor: '#28a745', position: 'fixed', width: '100%', height: '50px', alignItems: 'center', zIndex: 1000 }}>
       <Stack spacing={2}>
-        <Breadcrumbs separator="›" aria-label="breadcrumb">
+        <Breadcrumbs separator="›" aria-label="breadcrumb" sx={{color: 'white'}}> 
           {breadcrumbs}
         </Breadcrumbs>
       </Stack>
-    </Grid2>
+    </Box>
   );
 }

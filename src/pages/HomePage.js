@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import NewProjectForm from "../components/NewProjectForm";
 import {API_BASE_URL} from "../api";
-// Function to get the token (replace with your actual token retrieval logic)
 const getToken = () => {
   const token = localStorage.getItem('token');
   return token ? `Bearer ${token}` : null; 
@@ -23,6 +22,13 @@ axios.interceptors.request.use(
   }
 );
 
+let creatNewProjectFlag = false;
+
+export const getCreateNewProjectFlag = () => creatNewProjectFlag;
+export const setCreateNewProjectFlag = (value) => {
+    creatNewProjectFlag = value;
+};
+
 const HomePage = ({setSelectedProject}) => {
   const navigate = useNavigate();
   const [showPopup, setShowPopup] = useState(true);
@@ -41,6 +47,14 @@ const HomePage = ({setSelectedProject}) => {
       });
   }, []);
 
+  useEffect(() => {
+    if(creatNewProjectFlag){
+      setNewProject(true);
+      setShowPopup(false);
+      creatNewProjectFlag = false;
+    }
+  }, [creatNewProjectFlag]);
+
   const handleQuickStart = () => {
     navigate("/images"); // Navigate to the image comparison page
   };
@@ -50,9 +64,9 @@ const HomePage = ({setSelectedProject}) => {
     setNewProject(true);
   };
   const handleExistProject = () => {
-    if(projects.length >= 0){
-      navigate("/images");
-    }
+    // if(projects.length >= 0){
+      navigate("/projects");
+    // }
   };
 
   const handleOpenExistingProject = (projectId) => {
@@ -61,9 +75,8 @@ const HomePage = ({setSelectedProject}) => {
   };
   const handleNewProjectCreated = (createdProject) => {
     setSelectedProject(createdProject); // Pass newly created project to parent
-    setProjects((prevProjects) => [...prevProjects, createdProject]);
+    navigate("/images");
   };
-
   return (
      <>
       {showPopup && (
@@ -96,7 +109,7 @@ const HomePage = ({setSelectedProject}) => {
         </div>
         )}
         {newProject &&(
-          <NewProjectForm onProjectCreated={handleNewProjectCreated} />
+          <NewProjectForm onProjectCreated={handleNewProjectCreated}/>
         )}
     </>
   );

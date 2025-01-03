@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../api";
 
 export default function SignIn({ onSignIn, setUser }) {
   const [username, setUsername] = useState("");
@@ -12,7 +13,7 @@ export default function SignIn({ onSignIn, setUser }) {
     event.preventDefault();
     setError(""); 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/token/", {
+      const response = await fetch(`${API_BASE_URL}/api/token/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -26,7 +27,12 @@ export default function SignIn({ onSignIn, setUser }) {
         setError(errorMessage);
       } else {
         const data = await response.json();
-        onSignIn(data.access); // Pass the access token to the parent component
+        const token = data.access;
+        localStorage.setItem("token", token);
+        const accessTokenExpiresIn = 30 * 60 * 1000; // Example: 30 minutes
+        const tokenExpiry = new Date().getTime() + accessTokenExpiresIn;
+        localStorage.setItem("token_expiry", tokenExpiry);
+        onSignIn(token); // Pass the access token to the parent component
         setUser(data.user_id); // Pass the user object to the parent component
         navigate('/');
       }

@@ -14,24 +14,27 @@ import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import { useNavigate } from "react-router-dom";
 
+import NewProjectForm from "./NewProjectForm";
+import ProjectViews from './ProjectViews';
+import { setCreateNewProjectFlag } from "../pages/HomePage";
+
 const pages = [
   { 
     name: "Project", 
-    path: "/project", // You might not need a specific path for a dropdown
+    path: "/",
     submenu: [
       { name: "Open project", path: "/open-project" },
       { name: "New project", path: "/new-project" },
-      { name: "Rename", path: "/rename-project" }, // Adjust paths as needed
     ]
   },
   { name: "Images", path: "/images" },
   { name: "Text", path: "/text" },
-  { name: "Pdf", path: "/document" },
+  { name: "Pdf", path: "/pdf" },
 ];
 
 const settings = ["Profile", "Account", "Dashboard", "Logout"];
 
-function TopBar({ isAuthenticated, onSignOut }) {
+function TopBar({ isAuthenticated, onSignOut, setSelectedProject}) {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
   const [anchorElProject, setAnchorElProject] = React.useState(null); // Add for Project menu
@@ -73,10 +76,22 @@ function TopBar({ isAuthenticated, onSignOut }) {
 
   const handleProjectMenuClick = (path) => {
     handleCloseProjectMenu();
-    navigate(path); 
+    if(path === "/new-project"){
+      navigate("/");
+      setCreateNewProjectFlag(true);
+    }
+    if(path === "/open-project"){
+      navigate("/projects");
+    }
   };
 
+  const handleProjectView = (selectedProject) => { 
+    setSelectedProject(selectedProject); // Pass selected project to parent
+    navigate("/images");
+  }
+
   return (
+  <>
     <AppBar position="fixed" sx={{ bgcolor: "primary.light" }}>
       <Container maxWidth="xl">
         <Toolbar disableGutters>
@@ -133,7 +148,7 @@ function TopBar({ isAuthenticated, onSignOut }) {
             >
               {pages.map((page) => (
                   <MenuItem key={page.name} onClick={handleCloseNavMenu}>
-                    {page.submenu ? ( // Check for submenu
+                    {page.submenu && isAuthenticated ? ( // Check for submenu
                       <>
                         <Typography textAlign="center">{page.name}</Typography> 
                         <Menu 
@@ -168,7 +183,7 @@ function TopBar({ isAuthenticated, onSignOut }) {
           <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}>
             {pages.map((page) => (
               <div key={page.name}> {/* Wrap in a div for submenu */}
-                {page.submenu ? ( // Check for submenu
+                {page.submenu && isAuthenticated ? ( // Check for submenu
                   <>
                     <Button 
                       onClick={handleOpenProjectMenu}
@@ -258,8 +273,8 @@ function TopBar({ isAuthenticated, onSignOut }) {
           </Box>
         </Toolbar>
       </Container>
-
     </AppBar>
+  </>
   );
 }
 
