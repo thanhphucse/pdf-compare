@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { API_BASE_URL } from "../api";
+import Swal from "sweetalert2";
 
 const NewProjectForm = ({onProjectCreated} ) => {
   const [name, setName] = useState("");
@@ -19,12 +20,20 @@ const NewProjectForm = ({onProjectCreated} ) => {
         },
       })
       .then((response) => {
-        alert("Project created successfully!");
+        Swal.fire({
+          icon: "success",
+          title: "success",
+          text: "Project created successfully!",
+        });
         // navigate(`/projects/${response.data.id}`); // Redirect to the new project page
         onProjectCreated(response.data); // Pass the new project to the parent
       })
       .catch((error) => {
-        console.error("Error creating project:", error);
+        Swal.fire({
+          icon: "error",
+          title: "error",
+          text: "Error creating project",
+        });
       });
   };
 

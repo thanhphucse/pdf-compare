@@ -25,6 +25,8 @@ import { X } from "lucide-react";
 import BinaryFilePreview from "../components/BinaryFilePreview";
 import Base64FilePreview from "../components/Base64FilePreview";
 import { API_BASE_URL } from "../api";
+import ConfirmationDialog from "../components/ConfirmationDialog";
+import Swal from "sweetalert2";
 
 const ReviewModal = ({ open, onClose, file1Id, file1Name, file2Id, file2Name, compareResult, type }) => {
   return (
@@ -102,6 +104,16 @@ const Dashboard = ({onResetProject}) => {
   const [pdfPage, setPdfPage] = useState(0);
   const [pdfRowsPerPage, setPdfRowsPerPage] = useState(3);
 
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState(null);
+  const handleDeleteClick = (id) => {
+    setIsDialogOpen(true); // Open confirmation dialog
+    setSelectedId(id);
+  };
+  const handleCancelDelete = () => {
+    setIsDialogOpen(false); // Close dialog
+  };
+
   useEffect(() => {
     fetchProjects();
     fetchComparisons("image", imagePage, imageRowsPerPage, setImageComparisons);
@@ -169,19 +181,25 @@ const Dashboard = ({onResetProject}) => {
     setIsReviewOpen(true);
   };
 
-  const handleDelete = async (id) => {
-    const confirm = window.confirm("Are you sure you want to delete this comparison?");
-    if (confirm) {
-      try {
-        await axios.delete(`${API_BASE_URL}/api/comparisons/${id}/`);
-        alert("Comparison deleted successfully.");
-        fetchComparisons("image", imagePage, imageRowsPerPage, setImageComparisons); // Refresh data
-        fetchComparisons("text", textPage, textRowsPerPage, setTextComparisons);
-        fetchComparisons("pdf", pdfPage, pdfRowsPerPage, setPdfComparisons);
-      } catch (error) {
-        console.error("Error deleting comparison:", error);
-        alert("Failed to delete comparison.");
-      }
+  const handleDelete = async () => {
+    // const confirm = window.confirm("Are you sure you want to delete this comparison?");
+    setIsDialogOpen(false);
+    try {
+      await axios.delete(`${API_BASE_URL}/api/comparisons/${selectedId}/`);
+      Swal.fire({
+        icon: "success",
+        title: "success",
+        text: "Comparison deleted successfully.",
+      });
+      fetchComparisons("image", imagePage, imageRowsPerPage, setImageComparisons); // Refresh data
+      fetchComparisons("text", textPage, textRowsPerPage, setTextComparisons);
+      fetchComparisons("pdf", pdfPage, pdfRowsPerPage, setPdfComparisons);
+    } catch (error) {
+      Swal.fire({
+        icon: "erroe",
+        title: "error",
+        text: "Error deleting comparison.",
+      });
     }
   };
   const formatDate = (dateString) => {
@@ -259,10 +277,17 @@ const Dashboard = ({onResetProject}) => {
                   <Button
                     variant="outlined"
                     color="error"
-                    onClick={() => handleDelete(comparison.id)}
+                    onClick={() => handleDeleteClick(comparison.id)}
                   >
                     Delete
                   </Button>
+                  <ConfirmationDialog
+                    open={isDialogOpen}
+                    title="Delete Confirmation"
+                    message="Are you sure you want to delete this comparison? This action cannot be undone."
+                    onConfirm={handleDelete}
+                    onCancel={handleCancelDelete}
+                  />
                 </TableCell>
               </TableRow>
             ))}
